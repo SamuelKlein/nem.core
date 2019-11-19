@@ -25,6 +25,7 @@ public class NodeCollection implements SerializableEntity {
 	private final Map<NodeStatus, Set<Node>> statusNodesMap = new HashMap<NodeStatus, Set<Node>>() {
 		{
 			for (final NodeStatus value : NODE_STATUSES) {
+				System.out.println("this.put(value, createSet()); -- " + value);
 				this.put(value, createSet());
 			}
 		}
@@ -36,6 +37,7 @@ public class NodeCollection implements SerializableEntity {
 	 * Creates a node collection.
 	 */
 	public NodeCollection() {
+		System.out.println("Create NodeCollection()");
 	}
 
 	/**
@@ -51,6 +53,7 @@ public class NodeCollection implements SerializableEntity {
 	}
 
 	private static Set<Node> createSet() {
+		System.out.println("createSet()");
 		return Collections.newSetFromMap(new ConcurrentHashMap<>());
 	}
 
@@ -60,6 +63,7 @@ public class NodeCollection implements SerializableEntity {
 	 * @return A collection of active nodes.
 	 */
 	public Collection<Node> getActiveNodes() {
+		System.out.println("getActiveNodes()" + this.statusNodesMap.get(NodeStatus.ACTIVE));
 		return this.statusNodesMap.get(NodeStatus.ACTIVE);
 	}
 
@@ -69,6 +73,7 @@ public class NodeCollection implements SerializableEntity {
 	 * @return A collection of busy nodes.
 	 */
 	public Collection<Node> getBusyNodes() {
+		System.out.println("getBusyNodes()" + this.statusNodesMap.get(NodeStatus.BUSY));
 		return this.statusNodesMap.get(NodeStatus.BUSY);
 	}
 
@@ -78,9 +83,11 @@ public class NodeCollection implements SerializableEntity {
 	 * @return A collection of all non-blacklisted nodes.
 	 */
 	public Collection<Node> getAllNodes() {
+
 		final List<Node> allNodes = new ArrayList<>();
 		allNodes.addAll(this.getActiveNodes());
 		allNodes.addAll(this.getBusyNodes());
+		System.out.println("getAllNodes()" + allNodes);
 		return allNodes;
 	}
 
@@ -91,6 +98,7 @@ public class NodeCollection implements SerializableEntity {
 	 * @return All nodes with the specified status.
 	 */
 	public Collection<Node> getNodes(final NodeStatus status) {
+		System.out.println("getNodes(final NodeStatus status)" + status);
 		final Collection<Node> nodes = this.statusNodesMap.getOrDefault(status, null);
 		if (null == nodes) {
 			return new ArrayList<>();
@@ -105,6 +113,7 @@ public class NodeCollection implements SerializableEntity {
 	 * @return The total number of nodes
 	 */
 	public int size() {
+		System.out.println("size()");
 		return this.statusNodesMap.entrySet().stream()
 				.map(entry -> entry.getValue().size())
 				.reduce(0, Integer::sum);
@@ -117,6 +126,8 @@ public class NodeCollection implements SerializableEntity {
 	 * @return The matching node or null if not found.
 	 */
 	public Node findNodeByEndpoint(final NodeEndpoint endpoint) {
+		System.out.println("findNodeByEndpoint(final NodeEndpoint endpoint)" + endpoint);
+
 		for (final Node node : this.getAllNodes()) {
 			if (node.getEndpoint().equals(endpoint)) {
 				return node;
@@ -213,6 +224,7 @@ public class NodeCollection implements SerializableEntity {
 	 * that have stayed inactive since the last time this function was called.
 	 */
 	public void prune() {
+		System.out.println("prune()");
 		this.pruneCandidates.stream()
 				.filter(this::isPruneCandidate)
 				.forEach(node -> this.update(node, NodeStatus.UNKNOWN));
@@ -225,6 +237,7 @@ public class NodeCollection implements SerializableEntity {
 
 	@Override
 	public void serialize(final Serializer serializer) {
+		System.out.println("serialize(final Serializer serializer)" + serializer);
 		for (final NodeStatus value : NODE_STATUSES) {
 			final String key = value.toString().toLowerCase();
 			serializer.writeObjectArray(key, this.statusNodesMap.get(value));
@@ -246,5 +259,13 @@ public class NodeCollection implements SerializableEntity {
 
 		final NodeCollection rhs = (NodeCollection)obj;
 		return this.statusNodesMap.equals(rhs.statusNodesMap);
+	}
+
+	@Override
+	public String toString() {
+		return "NodeCollection{" +
+				"statusNodesMap=" + statusNodesMap +
+				", pruneCandidates=" + pruneCandidates +
+				'}';
 	}
 }
